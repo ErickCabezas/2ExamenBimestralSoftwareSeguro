@@ -60,3 +60,25 @@ JWT_SECRET_KEY=tu_clave_secreta_desarrollo
 ```
 
 Asegúrate de reemplazar los valores con tu configuración real, especialmente la `JWT_SECRET_KEY` para propósitos de desarrollo.
+### 4. Ejecutar proyecto
+Mantener el entorno virtual (venv) activado, pero ejecutar desde la raíz del proyecto. Es decir:
+Mantén el venv activado:
+```bash
+Deberías ver (venv) al inicio de tu línea de comandos
+```
+(venv) PS C:\Users\USUARIO\source\repos\Examen2BSoftwareSeguro\core-bankec-python>
+
+Asegúrate que estás en la raíz del proyecto (donde está el run.py), NO dentro de la carpeta app:
+
+CORRECTO - Estar aquí:
+```bash
+C:\Users\USUARIO\source\repos\Examen2BSoftwareSeguro\core-bankec-python>
+```
+#### NO estar aquí:
+```bash
+C:\Users\USUARIO\source\repos\Examen2BSoftwareSeguro\core-bankec-python\app>
+```
+### Ejecuta el programa:
+```bash
+python run.py
+```
