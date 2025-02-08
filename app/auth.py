@@ -1,7 +1,7 @@
 import jwt
 from datetime import datetime, timedelta
 from functools import wraps
-from flask import g
+from flask import g, request
 from flask_restx import abort
 import os
 

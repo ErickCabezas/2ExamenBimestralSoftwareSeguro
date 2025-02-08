@@ -1,0 +1,33 @@
+# Entorno virtual
+venv/
+env/
+ENV/
+
+# Archivos de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Logs y bases de datos
+*.log
+app.log
+*.sqlite3
+
+# Variables de entorno
+.env
+
+# Configuración de IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Otros archivos generados
+.DS_Store
+*.bak
+*.tmp
+*.temp
+
+# Caché de pip
+pip-log.txt
+pip-delete-this-directory.txt

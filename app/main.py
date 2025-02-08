@@ -1,10 +1,10 @@
 import secrets
 from app.auth import generate_jwt_token
-from .auth import jwt_required
+from app.auth import jwt_required
 from flask import Flask, request, g
 from flask_restx import Api, Resource, fields # type: ignore
 from functools import wraps
-from .db import get_connection, init_db
+from app.db import get_connection, init_db
 import logging
 
 # Define a simple in-memory token store
