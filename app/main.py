@@ -7,19 +7,28 @@ from functools import wraps
 from app.db import get_connection, init_db
 import logging
 
+# COLOCA EL CÓDIGO DE INTEGRACIÓN AQUÍ ↓
+from app.logger import logger, LogType
+
+def log_request(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        remote_ip = request.remote_addr
+        username = g.user.get('username', 'anonymous') if hasattr(g, 'user') else 'anonymous'
+        
+        action = f"{request.method} {request.path}"
+        logger.log(LogType.INFO, remote_ip, username, action, "200")
+
+        try:
+            response = f(*args, **kwargs)
+            return response
+        except Exception as e:
+            logger.log(LogType.ERROR, remote_ip, username, action, "500", {"error": str(e)})
+            raise
+    return decorated
+
 # Define a simple in-memory token store
 tokens = {}
-
-#log = logging.getLogger(__name__)
-logging.basicConfig(
-     filename="app.log",
-     level=logging.DEBUG,
-     encoding="utf-8",
-     filemode="a",
-     format="{asctime} - {levelname} - {message}",
-     style="{",
-     datefmt="%Y-%m-%d %H:%M",
-)
 
 # Configure Swagger security scheme for Bearer tokens
 authorizations = {
@@ -78,9 +87,11 @@ pay_credit_balance_model = bank_ns.model('PayCreditBalance', {
 
 @auth_ns.route('/login')
 class Login(Resource):
+    @log_request
     @auth_ns.expect(login_model, validate=True)
     @auth_ns.doc('login')
     def post(self):
+        print("🔥 ENTRANDO A LOGIN")
         """Inicia sesión y devuelve un token de autenticación."""
         data = api.payload
         username = data.get("username")
@@ -112,6 +123,7 @@ class Login(Resource):
 
 @auth_ns.route('/logout')
 class Logout(Resource):
+    @log_request
     @auth_ns.doc('logout')
     def post(self):
         """Invalida el token de autenticación."""
@@ -171,6 +183,7 @@ def token_required(f):
 @bank_ns.route('/deposit')
 class Deposit(Resource):
     logging.debug("Entering....")
+    @log_request
     @bank_ns.expect(deposit_model, validate=True)
     @bank_ns.doc('deposit')
     @jwt_required
@@ -207,6 +220,7 @@ class Deposit(Resource):
 
 @bank_ns.route('/withdraw')
 class Withdraw(Resource):
+    @log_request
     @bank_ns.expect(withdraw_model, validate=True)
     @bank_ns.doc('withdraw')
     @jwt_required
@@ -239,6 +253,7 @@ class Withdraw(Resource):
 
 @bank_ns.route('/transfer')
 class Transfer(Resource):
+    @log_request
     @bank_ns.expect(transfer_model, validate=True)
     @bank_ns.doc('transfer')
     @jwt_required
@@ -290,6 +305,7 @@ class Transfer(Resource):
 
 @bank_ns.route('/credit-payment')
 class CreditPayment(Resource):
+    @log_request
     @bank_ns.expect(credit_payment_model, validate=True)
     @bank_ns.doc('credit_payment')
     @jwt_required
@@ -340,6 +356,7 @@ class CreditPayment(Resource):
 
 @bank_ns.route('/pay-credit-balance')
 class PayCreditBalance(Resource):
+    @log_request
     @bank_ns.expect(pay_credit_balance_model, validate=True)
     @bank_ns.doc('pay_credit_balance')
     @jwt_required
@@ -403,5 +420,6 @@ def initialize_db():
     init_db()
 
 if __name__ == "__main__":
+    print("🚀 Starting server...")
     app.run(host="0.0.0.0", port=8000, debug=True)
 

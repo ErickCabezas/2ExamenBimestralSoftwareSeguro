@@ -17,5 +17,7 @@ COPY app/ ./app/
 # Exponer el puerto 8000
 EXPOSE 8000
 
+ENV PYTHONUNBUFFERED=1
+
 # Ejecutar la aplicación con Gunicorn (4 workers)
 CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "app.main:app"]
