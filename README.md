@@ -182,6 +182,78 @@ class Deposit(Resource):
         user_id = g.user['id']
         # Lógica del endpoint...
 ```
+### 4. Logger y LogType
+La clase Logger se encarga de gestionar los logs en la base de datos. El tipo de log se define mediante la enumeración LogType, que incluye los siguientes niveles de log:
+- Info
+- Warning
+- Error
+- Debug
+- Critical
+
+```
+class Logger:
+    def __init__(self, get_connection_func):
+        self.get_connection = get_connection_func
+        print("📁 Iniciando sistema de logs en base de datos...")
+
+    @contextmanager
+    def get_db_connection(self):
+        conn = None
+        try:
+            conn = self.get_connection()
+            yield conn
+        except Exception as e:
+            print(f"Error de conexión: {e}")
+            if conn:
+                conn.rollback()
+        finally:
+            if conn:
+                conn.close()
+
+    def log(self, log_type, remote_ip, username, action, http_code, additional_info=None):
+        print("⚠️ Intentando escribir log...")
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        try:
+            with self.get_db_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(""" 
+                        INSERT INTO bank.logs 
+                        (timestamp, log_type, remote_ip, username, action, http_code)
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                    """, (
+                        timestamp,
+                        log_type.value,
+                        remote_ip,
+                        username,
+                        action,
+                        http_code
+                    ))
+                conn.commit()
+        except Exception as e:
+            print(f"Error al guardar log en base de datos: {e}")
+```
+
+Se creó una tabla logs dentro del esquema bank para almacenar la información de los logs. La estructura de la tabla es la siguiente:
+
+
+```
+
+CREATE SCHEMA IF NOT EXISTS bank AUTHORIZATION postgres;
+
+CREATE TABLE IF NOT EXISTS bank.logs (
+    id SERIAL PRIMARY KEY,
+    timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    log_type VARCHAR(10) NOT NULL,
+    remote_ip VARCHAR(15) NOT NULL,
+    username VARCHAR(50) NOT NULL,
+    action VARCHAR(100) NOT NULL,
+    http_code INTEGER NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+```
+Para registrar las acciones realizadas por los usuarios, se integró el logger con los endpoints de la API usando el decorador log_request. Este decorador captura la IP del cliente, el nombre de usuario, la acción realizada, y el código HTTP de la respuesta.
 
 ## Uso
 
