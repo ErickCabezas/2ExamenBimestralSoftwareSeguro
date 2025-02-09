@@ -57,6 +57,24 @@ def init_db():
         user_id INTEGER REFERENCES bank.users(id)
     ); commit;
     """)
+
+
+    # Crear la tabla de logs
+    cur.execute("""
+        CREATE SCHEMA IF NOT EXISTS bank AUTHORIZATION postgres;
+
+        CREATE TABLE IF NOT EXISTS bank.logs (
+            id SERIAL PRIMARY KEY,
+            timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            log_type VARCHAR(10) NOT NULL,
+            remote_ip VARCHAR(15) NOT NULL,
+            username VARCHAR(50) NOT NULL,
+            action VARCHAR(100) NOT NULL,
+            http_code INTEGER NOT NULL,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ); 
+        """)
+    conn.commit()
     
     # Create tokens table to persist authentication tokens
     cur.execute("""
