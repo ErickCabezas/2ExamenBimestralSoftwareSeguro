@@ -287,6 +287,15 @@ Para registrar las acciones realizadas por los usuarios, se integró el logger c
 # ASEGURAR SERIVICIO DE COMPRA CON TARJETAS DE CREDITO
 ### Clase de Credit_Service y Credit_logger
 La clase de credit_service se encarga de crear una transaccion segura y validar el OTP. Para la verificacion del otp se añade el campo de email en el JWT
+### Variables de entorno
+```
+      ENCRYPTION_KEY: tu_clave_segura_aqui
+      SMTP_SERVER: smtp.gmail.com
+      SMTP_PORT: 587
+      SMTP_EMAIL: tu_email
+      SMTP_PASSWORD: email_password
+```
+
 ```python
 import re
 from datetime import datetime

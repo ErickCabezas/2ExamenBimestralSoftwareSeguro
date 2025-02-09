@@ -31,8 +31,8 @@ services:
       ENCRYPTION_KEY: tu_clave_segura_aqui
       SMTP_SERVER: smtp.gmail.com
       SMTP_PORT: 587
-      SMTP_EMAIL: slandazuri2003g@gmail.com
-      SMTP_PASSWORD: carlos1357
+      SMTP_EMAIL: tu_email
+      SMTP_PASSWORD: email_password
 
 volumes:
   pgdata:
