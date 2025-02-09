@@ -190,11 +190,11 @@ La clase Logger se encarga de gestionar los logs en la base de datos. El tipo de
 - Debug
 - Critical
 
-```
+```python
 class Logger:
     def __init__(self, get_connection_func):
         self.get_connection = get_connection_func
-        print("📁 Iniciando sistema de logs en base de datos...")
+        print("Iniciando sistema de logs en base de datos...")
 
     @contextmanager
     def get_db_connection(self):
@@ -211,7 +211,7 @@ class Logger:
                 conn.close()
 
     def log(self, log_type, remote_ip, username, action, http_code, additional_info=None):
-        print("⚠️ Intentando escribir log...")
+        print("Intentando escribir log...")
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         try:
@@ -237,8 +237,7 @@ class Logger:
 Se creó una tabla logs dentro del esquema bank para almacenar la información de los logs. La estructura de la tabla es la siguiente:
 
 
-```
-
+```python
 CREATE SCHEMA IF NOT EXISTS bank AUTHORIZATION postgres;
 
 CREATE TABLE IF NOT EXISTS bank.logs (
