@@ -182,7 +182,16 @@ class Deposit(Resource):
         user_id = g.user['id']
         # Lógica del endpoint...
 ```
+## Variables de Entorno
+```
+JWT_SECRET_KEY=tu_clave_secreta  # Requerido en producción
+```
 
+## Seguridad
+- Los tokens expiran después de 24 horas
+- Cada token contiene el ID, username y rol del usuario
+- Las contraseñas nunca se incluyen en el token
+- Se recomienda usar HTTPS en producción
 ## Uso
 
 ### 1. Login y Obtención del Token
@@ -201,16 +210,7 @@ curl -X POST http://localhost:8000/bank/deposit \
 ```
 
 # LOGS
-## Variables de Entorno
-```
-JWT_SECRET_KEY=tu_clave_secreta  # Requerido en producción
-```
 
-## Seguridad
-- Los tokens expiran después de 24 horas
-- Cada token contiene el ID, username y rol del usuario
-- Las contraseñas nunca se incluyen en el token
-- Se recomienda usar HTTPS en producción
 
 ### 4. Logger y LogType
 La clase Logger se encarga de gestionar los logs en la base de datos. El tipo de log se define mediante la enumeración LogType, que incluye los siguientes niveles de log:
