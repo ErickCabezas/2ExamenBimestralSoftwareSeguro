@@ -6,6 +6,7 @@ from flask_restx import Api, Resource, fields # type: ignore
 from functools import wraps
 from app.db import get_connection, init_db
 import logging
+from app.services.credit_service import credit_service
 
 # COLOCA EL CÓDIGO DE INTEGRACIÓN AQUÍ ↓
 from app.logger import logger, LogType
@@ -75,8 +76,19 @@ transfer_model = bank_ns.model('Transfer', {
     'amount': fields.Float(required=True, description='Monto a transferir', example=100)
 })
 
+# Reemplaza el modelo credit_payment_model existente con estos nuevos modelos
 credit_payment_model = bank_ns.model('CreditPayment', {
-    'amount': fields.Float(required=True, description='Monto de la compra a crédito', example=100)
+    'merchant_id': fields.Integer(required=True, description='ID del establecimiento', example=1),
+    'card_number': fields.String(required=False, description='Número de tarjeta', example='4532015112830366'),
+    'cvv': fields.String(required=True, description='Código CVV', example='123'),
+    'expiry_month': fields.Integer(required=False, description='Mes de expiración', example=12),
+    'expiry_year': fields.Integer(required=False, description='Año de expiración', example=2025),
+    'amount': fields.Float(required=True, description='Monto de la compra', example=100.50)
+})
+
+verify_otp_model = bank_ns.model('VerifyOTP', {
+    'transaction_id': fields.Integer(required=True, description='ID de la transacción', example=1),
+    'otp_code': fields.String(required=True, description='Código OTP', example='123456')
 })
 
 pay_credit_balance_model = bank_ns.model('PayCreditBalance', {
@@ -303,6 +315,7 @@ class Transfer(Resource):
         conn.close()
         return {"message": "Transfer successful", "new_balance": new_balance}, 200
 
+
 @bank_ns.route('/credit-payment')
 class CreditPayment(Resource):
     @log_request
@@ -311,49 +324,63 @@ class CreditPayment(Resource):
     @jwt_required
     def post(self):
         """
-        Realiza una compra a crédito:
-        - Descuenta el monto de la cuenta.
-        - Aumenta la deuda de la tarjeta de crédito.
+        Realiza un pago seguro con tarjeta de crédito:
+        - Valida el establecimiento
+        - Verifica y procesa la tarjeta
+        - Genera y envía código OTP
+        - Registra la transacción
         """
-        data = api.payload
-        amount = data.get("amount", 0)
-        if amount <= 0:
-            api.abort(400, "Amount must be greater than zero")
-        user_id = g.user['id']
-        conn = get_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT balance FROM bank.accounts WHERE user_id = %s", (user_id,))
-        row = cur.fetchone()
-        if not row:
-            cur.close()
-            conn.close()
-            api.abort(404, "Account not found")
-        account_balance = float(row[0])
-        if account_balance < amount:
-            cur.close()
-            conn.close()
-            api.abort(400, "Insufficient funds in account")
         try:
-            cur.execute("UPDATE bank.accounts SET balance = balance - %s WHERE user_id = %s", (amount, user_id))
-            cur.execute("UPDATE bank.credit_cards SET balance = balance + %s WHERE user_id = %s", (amount, user_id))
-            cur.execute("SELECT balance FROM bank.accounts WHERE user_id = %s", (user_id,))
-            new_account_balance = float(cur.fetchone()[0])
-            cur.execute("SELECT balance FROM bank.credit_cards WHERE user_id = %s", (user_id,))
-            new_credit_balance = float(cur.fetchone()[0])
-            conn.commit()
-        except Exception as e:
-            conn.rollback()
-            cur.close()
-            conn.close()
-            api.abort(500, f"Error processing credit card purchase: {str(e)}")
-        cur.close()
-        conn.close()
-        return {
-            "message": "Credit card purchase successful",
-            "account_balance": new_account_balance,
-            "credit_card_debt": new_credit_balance
-        }, 200
+            if not g.user.get('email'):
+                return {"message": "User email is required for OTP verification"}, 400
 
+            transaction_id, message = credit_service.process_payment(
+                g.user['id'],
+                g.user['email'],
+                api.payload
+            )
+
+            return {
+                       "message": message,
+                       "transaction_id": transaction_id
+                   }, 200
+
+        except ValueError as e:
+            return {"message": str(e)}, 400
+        except Exception as e:
+            return {"message": "An error occurred processing the payment"}, 500
+
+
+@bank_ns.route('/verify-otp')
+class VerifyOTP(Resource):
+    @log_request
+    @bank_ns.expect(verify_otp_model, validate=True)
+    @bank_ns.doc('verify_otp')
+    @jwt_required
+    def post(self):
+        """
+        Verifica el código OTP y completa la transacción:
+        - Valida el código OTP
+        - Actualiza el estado de la transacción
+        - Registra la confirmación
+        """
+        try:
+            amount, merchant = credit_service.verify_otp(
+                g.user['id'],
+                api.payload['transaction_id'],
+                api.payload['otp_code']
+            )
+
+            return {
+                       "message": "Transaction completed successfully",
+                       "amount": amount,
+                       "merchant": merchant
+                   }, 200
+
+        except ValueError as e:
+            return {"message": str(e)}, 400
+        except Exception as e:
+            return {"message": "An error occurred verifying the OTP"}, 500
 @bank_ns.route('/pay-credit-balance')
 class PayCreditBalance(Resource):
     @log_request
