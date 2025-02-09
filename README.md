@@ -182,6 +182,36 @@ class Deposit(Resource):
         user_id = g.user['id']
         # Lógica del endpoint...
 ```
+
+## Uso
+
+### 1. Login y Obtención del Token
+```bash
+curl -X POST http://localhost:8000/auth/login \
+     -H "Content-Type: application/json" \
+     -d '{"username":"user1","password":"pass1"}'
+```
+
+### 2. Uso del Token en Requests
+```bash
+curl -X POST http://localhost:8000/bank/deposit \
+     -H "Authorization: Bearer <tu_token_jwt>" \
+     -H "Content-Type: application/json" \
+     -d '{"amount":100}'
+```
+
+# LOGS
+## Variables de Entorno
+```
+JWT_SECRET_KEY=tu_clave_secreta  # Requerido en producción
+```
+
+## Seguridad
+- Los tokens expiran después de 24 horas
+- Cada token contiene el ID, username y rol del usuario
+- Las contraseñas nunca se incluyen en el token
+- Se recomienda usar HTTPS en producción
+
 ### 4. Logger y LogType
 La clase Logger se encarga de gestionar los logs en la base de datos. El tipo de log se define mediante la enumeración LogType, que incluye los siguientes niveles de log:
 - Info
@@ -254,30 +284,3 @@ CREATE TABLE IF NOT EXISTS bank.logs (
 ```
 Para registrar las acciones realizadas por los usuarios, se integró el logger con los endpoints de la API usando el decorador log_request. Este decorador captura la IP del cliente, el nombre de usuario, la acción realizada, y el código HTTP de la respuesta.
 
-## Uso
-
-### 1. Login y Obtención del Token
-```bash
-curl -X POST http://localhost:8000/auth/login \
-     -H "Content-Type: application/json" \
-     -d '{"username":"user1","password":"pass1"}'
-```
-
-### 2. Uso del Token en Requests
-```bash
-curl -X POST http://localhost:8000/bank/deposit \
-     -H "Authorization: Bearer <tu_token_jwt>" \
-     -H "Content-Type: application/json" \
-     -d '{"amount":100}'
-```
-
-## Variables de Entorno
-```
-JWT_SECRET_KEY=tu_clave_secreta  # Requerido en producción
-```
-
-## Seguridad
-- Los tokens expiran después de 24 horas
-- Cada token contiene el ID, username y rol del usuario
-- Las contraseñas nunca se incluyen en el token
-- Se recomienda usar HTTPS en producción
