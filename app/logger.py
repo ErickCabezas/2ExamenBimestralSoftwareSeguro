@@ -13,7 +13,7 @@ class LogType(Enum):
 class Logger:
     def __init__(self, get_connection_func):
         self.get_connection = get_connection_func
-        print("📁 Iniciando sistema de logs en base de datos...")
+        print("Iniciando sistema de logs en base de datos...")
 
     @contextmanager
     def get_db_connection(self):
